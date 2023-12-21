@@ -7,3 +7,5 @@ pymysql > 1.0
 pathlib > 1.0
 dynatrace-opentelemetry-azure-functions 
 opentelemetry-instrumentation-pymysql
+opentelemetry-api
+opentelemetry-sdk

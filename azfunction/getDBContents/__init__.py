@@ -1,13 +1,14 @@
 import shared_code.dt_helper
-from dynatrace.opentelemetry.azure.functions import wrap_handler
 import logging
 import os
 import azure.functions as func
 import pymysql
 import pathlib
+from dynatrace.opentelemetry.azure.functions import wrap_handler
 from opentelemetry.instrumentation.pymysql import PyMySQLInstrumentor
-
-
+#from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+#from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+#from opentelemetry._logs import set_logger_provider
 
 @wrap_handler
 def main(req: func.HttpRequest, context: func.Context) -> func.HttpResponse:
