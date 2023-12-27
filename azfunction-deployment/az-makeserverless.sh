@@ -1,10 +1,39 @@
 #!/bin/bash
 
+create_serverless_resource_group()
+{
+    resourceGroup="serverless-azfunc-$randomIdentifier"
+    if [ "$(does_rsgroup_exist)" == "true" ]; then
+            echo "Skipping, resource group $resourceGroup exists"
+            echo ""
+        else
+            echo ""
+            echo "Provisioning resource group: $resourceGroup"
+            echo "--------"
+             az group create \
+              --location "$azlocation" \
+              --name "$resourceGroup"
+            echo "-------"
+        fi
+ 
+}
+
+does_rsgroup_exist()
+{
+  resourceGroup="serverless-azfunc-$randomIdentifier"
+  GROUPCHECK=$(az group show -g $resourceGroup --output tsv --query id 2>&1 | grep "NotFound")
+  if [ -z "$GROUPCHECK" ]; then
+    echo true
+  else
+    echo false
+  fi
+}
+
 createDB()
 {
     #let "randomIdentifier=$RANDOM*$RANDOM"
     #vNet="dt-ordersdb-$randomIdentifier"
-    #resourceGroup="gurbani-serverless-azfunc-$randomIdentifier"
+    #resourceGroup="serverless-azfunc-$randomIdentifier"
     #vNetAddressPrefix="10.0.0.0/16"
     #azlocation="eastus"
     #subnet="subnet-$randomIdentifier"
@@ -15,8 +44,8 @@ createDB()
     dbusername="dtordersdbadmin"
     dbpassword="Workshop123#"
 
-    echo "create resource group"
-    az group create --name $resourceGroup --location "$azlocation" 
+    #echo "create resource group"
+    #az group create --name $resourceGroup --location "$azlocation" 
 
     echo "Creating MYSQL database"
     dbcreate=$(az mysql flexible-server create --resource-group $resourceGroup --name $dbservername --location $azlocation --admin-user $dbusername --admin-password $dbpassword --sku-name Standard_B1ms --tier Burstable --public-access 0.0.0.0 --yes)
@@ -51,15 +80,17 @@ createFunction()
     createAzStorage=$(az storage account create --name $azstorage --location $azlocation --resource-group $resourceGroup --sku Standard_LRS --only-show-errors)
 
     #create FunctionApp
-    createAzFunction=$(az functionapp create --resource-group $resourceGroup --consumption-plan-location $azlocation --runtime python --runtime-version 3.9 --functions-version 4 --name $azfuncName --os-type linux --storage-account $azstorage --disable-app-insights)
+    createAzFunction=$(az functionapp create --resource-group $resourceGroup --consumption-plan-location $azlocation --runtime python --runtime-version 3.10 --functions-version 4 --name $azfuncName --os-type linux --storage-account $azstorage --disable-app-insights)
 
     #deploy the code to FunctionApp
-    deployCodeToFunction=$(az functionapp deployment source config-zip --resource-group $resourceGroup  --name $azfuncName --src getDBContents-v2.zip --build-remote true )
+    deployCodeToFunction=$(az functionapp deployment source config-zip --resource-group $resourceGroup  --name $azfuncName --src $AzdeploymentCodeZip --build-remote true )
     deploymentStatus=$(echo $deployCodeToFunction | jq '.complete')
 
     setCors=$(az functionapp cors add -g $resourceGroup  -n $azfuncName --allowed-origins https://portal.azure.com)
 
+    #set Function Env Variables for DB Connection
     setAppConfigonAzFunc=$(az functionapp config appsettings set -g $resourceGroup -n $azfuncName --settings @db1.json)
+    
 }
 
 createAPIGW()
@@ -97,5 +128,10 @@ createAPIGW()
 #main
 
 let "randomIdentifier=$RANDOM*$RANDOM"
-resourceGroup="gurbani-serverless-azfunc-$randomIdentifier"
+resourceGroup="serverless-azfunc-$randomIdentifier"
 azlocation="eastus"
+AzdeploymentCodeZip="az-catalog-function-withOtel-v2.zip"
+#aztest="1"
+create_serverless_resource_group 
+createDB 
+createFunction
