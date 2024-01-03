@@ -1,8 +1,0 @@
-{
-    "Tenant": "dtenvid",
-    "ClusterID": -1436386676,
-    "Connection": {
-      "BaseUrl": "https://dtenvid.live.dynatrace.com",
-      "AuthToken": "dt0a01.vfk32278.cab4bababab"
-    }
-  }
