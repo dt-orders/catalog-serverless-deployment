@@ -91,6 +91,12 @@ createFunction()
     #set Function Env Variables for DB Connection
     setAppConfigonAzFunc=$(az functionapp config appsettings set -g $resourceGroup -n $azfuncName --settings @db1.json)
     
+    #get FunctionURL to store and use for later
+    AZ_FUNCTION_URL_findByNameContains=$(az functionapp function show --function-name findbyNameContains --resource-group $resourceGroup --query "invokeUrlTemplate" --output tsv --name $azfuncName)
+    AZ_FUNCTION_URL_findByNameContains=$(echo $AZ_FUNCTION_URL_findByNameContains|tr -d '\r\n') #Remove breaklines from result
+
+    AZ_FUNCTION_URL_ServerlessDBActions=$(az functionapp function show --function-name ServerlessDBActions --resource-group $resourceGroup --query "invokeUrlTemplate" --output tsv --name $azfuncName)
+    AZ_FUNCTION_URL_ServerlessDBActions=$(echo $AZ_FUNCTION_URL_ServerlessDBActions|tr -d '\r\n') #Remove breaklines from result
 }
 
 createAPIGW()
@@ -124,6 +130,17 @@ createAPIGW()
     replaceRandomIDinPS=$(sed -i "s/RANDOM_CHAGEME/$randomIdentifier/g" setbacked.ps1)
 }
 
+updateK8AndDockerWithFuncURL()
+{
+  pathToK8Manifest=""
+  pathToDockerYML=""
+
+  replaceFuncFindbyName=$(sed -i "s/CHANGEME_FINDBYNAME/$AZ_FUNCTION_URL_findByNameContains/g" $pathToK8Manifest/catalog-service-serverless.yml)
+  replaceFuncDBActions=$(sed -i "s/CHANGEME_SERVERLESS_DB_ACTIONS/$AZ_FUNCTION_URL_ServerlessDBActions/g" $pathToK8Manifest/catalog-service-serverless.yml)
+
+  replaceFuncFindbyName=$(sed -i "s/CHANGEME_FINDBYNAME/$AZ_FUNCTION_URL_findByNameContains/g" $pathToDockerYML/docker-compose-services-serverless.yml)
+  replaceFuncDBActions=$(sed -i "s/CHANGEME_SERVERLESS_DB_ACTIONS/$AZ_FUNCTION_URL_ServerlessDBActions/g" $pathToDockerYML/docker-compose-services-serverless.yml)
+}
 
 #main
 
@@ -135,3 +152,4 @@ AzdeploymentCodeZip="az-catalog-function-withOtel-v2.zip"
 create_serverless_resource_group 
 createDB 
 createFunction
+updateK8AndDockerWithFuncURL

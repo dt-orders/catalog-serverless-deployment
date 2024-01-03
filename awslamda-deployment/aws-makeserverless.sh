@@ -58,6 +58,11 @@ createFunction()
 
     #set Function Env Variables for DB Connection
     setAppConfigonAzFunc=$(set-environment-variables-lambda @db.json)
+
+    #get FunctionURL to store and use for later
+    AZ_FUNCTION_URL_findByNameContains=$(az functionapp function show --function-name findbyNameContains --resource-group $resourceGroup --query "invokeUrlTemplate" --output tsv --name $azfuncName)
+    
+    AZ_FUNCTION_URL_ServerlessDBActions=$(az functionapp function show --function-name ServerlessDBActions --resource-group $resourceGroup --query "invokeUrlTemplate" --output tsv --name $azfuncName)
 }
 
 
