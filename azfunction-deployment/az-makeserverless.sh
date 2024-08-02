@@ -152,4 +152,4 @@ AzdeploymentCodeZip="az-catalog-function-withOtel-v2.zip"
 create_serverless_resource_group 
 createDB 
 createFunction
-updateK8AndDockerWithFuncURL
+#updateK8AndDockerWithFuncURL
